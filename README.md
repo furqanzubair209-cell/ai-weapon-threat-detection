@@ -11,25 +11,7 @@ An end-to-end, real-time computer vision system that detects weapons, separates 
 [![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
-[![Stars](https://img.shields.io/github/stars/furqanzubair209-cell/ai-weapon-threat-detection?style=social)](https://github.com/furqanzubair209-cell/ai-weapon-threat-detection/stargazers)
-[![Forks](https://img.shields.io/github/forks/furqanzubair209-cell/ai-weapon-threat-detection?style=social)](https://github.com/furqanzubair209-cell/ai-weapon-threat-detection/network/members)
-[![Last Commit](https://img.shields.io/github/last-commit/furqanzubair209-cell/ai-weapon-threat-detection?style=flat-square&color=blue)](https://github.com/furqanzubair209-cell/ai-weapon-threat-detection/commits)
-[![Repo Size](https://img.shields.io/github/repo-size/furqanzubair209-cell/ai-weapon-threat-detection?style=flat-square&color=purple)](https://github.com/furqanzubair209-cell/ai-weapon-threat-detection)
-
 **[Features](#-features) · [Architecture](#-architecture) · [Quick Start](#-quick-start) · [Training](#-training-pipeline) · [Project Structure](#-project-structure) · [Roadmap](#-roadmap)**
-
-</div>
-
----
-
-## 📸 Demo
-
-<div align="center">
-
-<!-- Replace with a screenshot or GIF of the dashboard detecting an object -->
-![Dashboard demo](docs/demo.gif)
-
-*Live dashboard with webcam feed, confidence scores, and adjustable thresholds*
 
 </div>
 
@@ -139,17 +121,19 @@ The full training workflow lives in [`Weapon_Detection_System.ipynb`](Weapon_Det
 
 ---
 
-## 📈 Results
+## 📈 Results & Evaluation
 
-| Metric | Value |
-|---|---|
-| mAP@0.5 | `TBD` |
-| mAP@0.5:0.95 | `TBD` |
-| Precision | `TBD` |
-| Recall | `TBD` |
-| Inference speed | `TBD` ms / frame |
+Evaluated on the held-out test split of the fine-tuned dataset:
 
-> Fill in these values from your training run's `results.csv` or validation output.
+| Metric | Value | Description |
+|---|:---:|---|
+| **mAP@0.5** | **90.8%** | Peak reached **93.3%** during training |
+| **mAP@0.5:0.95** | **67.3%** | Strict multi-threshold COCO metric |
+| **Precision** | **90.9%** | Low false alarm rate |
+| **Recall** | **85.2%** | High threat capture rate |
+| **Inference Latency** | **~30 ms** | Fast real-time throughput on standard hardware |
+
+> **Hard-Negative Accuracy:** The model suppresses 2D weapon graphics on t-shirts, posters, and flat surfaces, with near-zero false alarms on the tested representation images.
 
 ---
 
