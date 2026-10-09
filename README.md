@@ -17,6 +17,34 @@ An end-to-end, real-time computer vision system that detects weapons, separates 
 
 ---
 
+## 📸 Demo
+
+<div align="center">
+
+### 🔴 Live Detection
+<img src="docs/live_detection.png" alt="Live webcam detection of a pistol with threat classification" width="100%"/>
+
+*Live webcam feed with bounding boxes, threat level, per-class confidence bars, and detection log*
+
+<br/>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/gun_detection.png" alt="Real weapon detection on a toy-like pistol image" width="100%"/>
+      <br/><sub><b>Image Analysis: Real Weapon (Gun)</b></sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/knife_detection.png" alt="Knife detection on a wooden surface" width="100%"/>
+      <br/><sub><b>Image Analysis: Real Weapon (Knife)</b></sub>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+---
+
 ## ✨ Features
 
 | | Feature | Description |
