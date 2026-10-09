@@ -11,11 +11,6 @@ An end-to-end, real-time computer vision system that detects weapons, separates 
 [![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
-[![Stars](https://img.shields.io/github/stars/furqanzubair209-cell/ai-weapon-threat-detection?style=social)](https://github.com/furqanzubair209-cell/ai-weapon-threat-detection/stargazers)
-[![Forks](https://img.shields.io/github/forks/furqanzubair209-cell/ai-weapon-threat-detection?style=social)](https://github.com/furqanzubair209-cell/ai-weapon-threat-detection/network/members)
-[![Last Commit](https://img.shields.io/github/last-commit/furqanzubair209-cell/ai-weapon-threat-detection?style=flat-square&color=blue)](https://github.com/furqanzubair209-cell/ai-weapon-threat-detection/commits)
-[![Repo Size](https://img.shields.io/github/repo-size/furqanzubair209-cell/ai-weapon-threat-detection?style=flat-square&color=purple)](https://github.com/furqanzubair209-cell/ai-weapon-threat-detection)
-
 **[Features](#-features) · [Architecture](#-architecture) · [Quick Start](#-quick-start) · [Training](#-training-pipeline) · [Project Structure](#-project-structure) · [Roadmap](#-roadmap)**
 
 </div>
@@ -27,7 +22,7 @@ An end-to-end, real-time computer vision system that detects weapons, separates 
 <div align="center">
 
 ### 🔴 Live Detection
-<img src="images/live_detection.png" alt="Live webcam detection of a pistol with threat classification" width="100%"/>
+<img src="https://raw.githubusercontent.com/furqanzubair209-cell/ai-weapon-threat-detection/main/images/live detection.png" alt="Live webcam detection of a pistol with threat classification" width="100%"/>
 
 *Live webcam feed with bounding boxes, threat level, per-class confidence bars, and detection log*
 
@@ -36,11 +31,11 @@ An end-to-end, real-time computer vision system that detects weapons, separates 
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="images/gun_detection.png" alt="Real weapon detection on a toy-like pistol image" width="100%"/>
+      <img src="https://raw.githubusercontent.com/furqanzubair209-cell/ai-weapon-threat-detection/main/images/gun detection.png" alt="Real weapon detection on a toy-like pistol image" width="100%"/>
       <br/><sub><b>Image Analysis: Real Weapon (Gun)</b></sub>
     </td>
     <td align="center" width="50%">
-      <img src="images/knife_detection.png" alt="Knife detection on a wooden surface" width="100%"/>
+      <img src="https://raw.githubusercontent.com/furqanzubair209-cell/ai-weapon-threat-detection/main/images/knife detection.png" alt="Knife detection on a wooden surface" width="100%"/>
       <br/><sub><b>Image Analysis: Real Weapon (Knife)</b></sub>
     </td>
   </tr>
