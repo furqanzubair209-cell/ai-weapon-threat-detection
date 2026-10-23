@@ -24,6 +24,7 @@
                 <li><a href="#hero" class="nav-link active">Home</a></li>
                 <li><a href="#detection" class="nav-link">Detection</a></li>
                 <li><a href="#live-detection" class="nav-link live-nav">&#128250; Live</a></li>
+                <li><a href="#video-analysis" class="nav-link">&#127916; Video</a></li>
                 <li><a href="#performance" class="nav-link">Performance</a></li>
                 <li><a href="#how-it-works" class="nav-link">How It Works</a></li>
                 <li><a href="#dataset" class="nav-link">Dataset</a></li>
@@ -117,6 +118,10 @@
                         <button class="btn btn-outline" id="sampleBtn">
                             &#128248; Use Sample Image
                         </button>
+                    </div>
+                    <div class="conf-slider-wrap" style="margin-top: 14px;">
+                        <label for="imgConfSlider">Sensitivity: <span id="imgConfSliderVal">8%</span> (Optimized for knives &amp; concealed weapons)</label>
+                        <input type="range" id="imgConfSlider" min="3" max="50" value="8" step="1">
                     </div>
                 </div>
                 <div class="detection-preview" id="detectionPreview">
@@ -283,6 +288,133 @@
                             <span class="stat-box-val" id="toyDetections">0</span>
                             <span class="stat-box-label">Toy Weapon</span>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Upload & Analysis Section -->
+    <section class="section" id="video-analysis">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">&#127916; Batch Surveillance</span>
+                <h2 class="section-title">Video <span class="gradient-text">Threat Analysis</span></h2>
+                <p class="section-desc">Upload surveillance or inspection video for automated frame-by-frame weapon detection, threat classification, and annotated export.</p>
+            </div>
+
+            <div class="video-analysis-wrapper">
+                <!-- Video Upload Controls Panel -->
+                <div class="video-upload-card">
+                    <div class="upload-zone video-drop-zone" id="videoUploadZone">
+                        <div class="upload-icon">
+                            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                                <line x1="7" y1="2" x2="7" y2="22"/>
+                                <line x1="17" y1="2" x2="17" y2="22"/>
+                                <line x1="2" y1="12" x2="22" y2="12"/>
+                                <line x1="2" y1="7" x2="7" y2="7"/>
+                                <line x1="2" y1="17" x2="7" y2="17"/>
+                                <line x1="17" y1="17" x2="22" y2="17"/>
+                                <line x1="17" y1="7" x2="22" y2="7"/>
+                            </svg>
+                        </div>
+                        <p class="upload-text">Drag & drop a video file here</p>
+                        <p class="upload-subtext">Supported: MP4, AVI, MOV, MKV, WEBM (Max 100MB)</p>
+                        <input type="file" id="videoFileInput" accept="video/mp4,video/avi,video/quicktime,video/x-matroska,video/webm" hidden>
+                    </div>
+
+                    <!-- File Details Preview -->
+                    <div class="video-file-info" id="videoFileInfo" style="display:none;">
+                        <div class="file-info-icon">&#127916;</div>
+                        <div class="file-info-details">
+                            <div class="file-info-name" id="videoFileName">filename.mp4</div>
+                            <div class="file-info-meta" id="videoFileMeta">0 MB &bull; Ready</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline" id="removeVideoBtn" title="Remove video">&times;</button>
+                    </div>
+
+                    <!-- Video Processing Settings -->
+                    <div class="video-settings-grid">
+                        <div class="setting-item">
+                            <label for="videoConfSlider">Confidence: <span id="videoConfVal">20%</span></label>
+                            <input type="range" id="videoConfSlider" min="10" max="80" value="20" step="5">
+                        </div>
+                        <div class="setting-item">
+                            <label for="frameStrideSelect">Sampling Speed:</label>
+                            <select id="frameStrideSelect" class="styled-select">
+                                <option value="1">High Precision (Every Frame)</option>
+                                <option value="2" selected>Balanced (Every 2nd Frame)</option>
+                                <option value="5">Fast Scan (Every 5th Frame)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="video-actions">
+                        <button class="btn btn-primary btn-full" id="startVideoAnalysisBtn" disabled>
+                            <span class="btn-icon">&#9658;</span> Analyze Video
+                        </button>
+                    </div>
+
+                    <!-- Processing Progress Bar -->
+                    <div class="video-progress-container" id="videoProgressContainer" style="display:none;">
+                        <div class="progress-header">
+                            <span class="progress-status" id="videoProgressStatus">Initializing neural pipeline...</span>
+                            <span class="progress-percent" id="videoProgressPercent">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="videoProgressFill" style="width: 0%;"></div>
+                        </div>
+                        <div class="progress-meta" id="videoProgressMeta">Frames: 0 / 0 &bull; FPS: --</div>
+                    </div>
+                </div>
+
+                <!-- Video Results View -->
+                <div class="video-results-card">
+                    <!-- Video Preview Header & State Badge -->
+                    <div class="video-preview-header" id="videoPreviewHeader" style="display:none;">
+                        <span class="preview-badge" id="previewBadge">&#128249; Uploaded Video Preview</span>
+                        <span class="preview-filename" id="previewFilename"></span>
+                    </div>
+
+                    <!-- Raw vs Processed Video Tabs/Display -->
+                    <div class="video-player-container" id="videoPlayerContainer">
+                        <div class="video-placeholder" id="videoPlaceholder">
+                            <span class="placeholder-icon">&#127916;</span>
+                            <p>Select or drop a video to preview it here instantly</p>
+                        </div>
+                        <video id="annotatedVideoPlayer" controls playsinline style="display:none;"></video>
+                    </div>
+
+                    <!-- Detection Summary Counters -->
+                    <div class="video-summary-stats" id="videoSummaryStats" style="display:none;">
+                        <div class="stat-box danger-box">
+                            <span class="stat-box-val" id="vidRealCount">0</span>
+                            <span class="stat-box-label">Real Weapons</span>
+                        </div>
+                        <div class="stat-box warn-box">
+                            <span class="stat-box-val" id="vidToyCount">0</span>
+                            <span class="stat-box-label">Toy Weapons</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-box-val" id="vidThreatLevel">NONE</span>
+                            <span class="stat-box-label">Threat Level</span>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Alert Events -->
+                    <div class="video-timeline-wrapper" id="videoTimelineWrapper" style="display:none;">
+                        <h4 class="timeline-title">&#128337; Detection Timeline (Click to Jump)</h4>
+                        <div class="video-timeline-list" id="videoTimelineList">
+                            <!-- Timeline pill entries rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Download Button -->
+                    <div class="video-download-area" id="videoDownloadArea" style="display:none;">
+                        <a id="downloadVideoBtn" class="btn btn-primary btn-full" download>
+                            &#128229; Download Annotated Video
+                        </a>
                     </div>
                 </div>
             </div>

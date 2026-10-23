@@ -1,7 +1,7 @@
 // ===== CONFIGURATION & API BACKEND =====
 const API_BASE = window.location.protocol.startsWith('http') ? window.location.origin : 'http://127.0.0.1:8000';
 let isBackendOnline = false;
-let currentConfThreshold = 0.20;
+let currentConfThreshold = 0.08;
 
 // ===== NAVBAR SCROLL & MOBILE MENU =====
 const navbar = document.getElementById('navbar');
@@ -136,6 +136,17 @@ if (confSlider && confSliderVal) {
     confSlider.addEventListener('input', (e) => {
         currentConfThreshold = parseInt(e.target.value, 10) / 100;
         confSliderVal.textContent = `${e.target.value}%`;
+    });
+}
+
+// Image Upload Sensitivity Slider
+const imgConfSlider = document.getElementById('imgConfSlider');
+const imgConfSliderVal = document.getElementById('imgConfSliderVal');
+if (imgConfSlider && imgConfSliderVal) {
+    currentConfThreshold = 0.08;
+    imgConfSlider.addEventListener('input', (e) => {
+        currentConfThreshold = parseInt(e.target.value, 10) / 100;
+        imgConfSliderVal.textContent = `${e.target.value}%`;
     });
 }
 
@@ -361,9 +372,16 @@ function handleUploadResults(detections, procTime) {
         return;
     }
 
+    // Redraw base image first to ensure a clean canvas
+    if (currentUploadImage) {
+        drawUploadedImage(currentUploadImage);
+    }
+
     // Found weapon(s)
     const primary = detections[0];
-    const isReal = primary.type === 'real' || primary.class.toLowerCase().includes('real');
+    const category = primary.category || (primary.type === 'real' ? 'REAL_WEAPON' : (primary.type === 'toy' ? 'TOY_WEAPON' : 'UNCERTAIN'));
+    const isReal = category === 'REAL_WEAPON';
+    const isToy = category === 'TOY_WEAPON';
     const conf = primary.confidence;
 
     // Draw bounding boxes on canvas
@@ -371,7 +389,8 @@ function handleUploadResults(detections, procTime) {
     const H = uploadCanvas.height;
 
     detections.forEach(det => {
-        const boxColor = det.type === 'real' ? '#ff3366' : '#ffaa00';
+        const cat = det.category || (det.type === 'real' ? 'REAL_WEAPON' : (det.type === 'toy' ? 'TOY_WEAPON' : 'UNCERTAIN'));
+        const boxColor = cat === 'REAL_WEAPON' ? '#ff3366' : (cat === 'TOY_WEAPON' ? '#ffaa00' : '#00d4ff');
         const bx = det.bbox.x * W;
         const by = det.bbox.y * H;
         const bw = det.bbox.w * W;
@@ -381,23 +400,59 @@ function handleUploadResults(detections, procTime) {
         uploadCtx.lineWidth = 3;
         uploadCtx.strokeRect(bx, by, bw, bh);
 
+        // Tech Corner Accents
+        const cl = Math.min(18, bw * 0.25);
+        uploadCtx.lineWidth = 4;
+        [[bx, by, 1, 1], [bx + bw, by, -1, 1], [bx, by + bh, 1, -1], [bx + bw, by + bh, -1, -1]].forEach(([cx, cy, sx, sy]) => {
+            uploadCtx.beginPath();
+            uploadCtx.moveTo(cx + sx * cl, cy);
+            uploadCtx.lineTo(cx, cy);
+            uploadCtx.lineTo(cx, cy + sy * cl);
+            uploadCtx.stroke();
+        });
+
         uploadCtx.fillStyle = boxColor;
         const lbl = `${det.class} ${det.confidence}%`;
         uploadCtx.font = 'bold 13px Inter, sans-serif';
-        const tw = uploadCtx.measureText(lbl).width + 12;
-        uploadCtx.fillRect(bx, by - 24, tw, 22);
-        uploadCtx.fillStyle = '#fff';
-        uploadCtx.fillText(lbl, bx + 6, by - 8);
+        const tw = uploadCtx.measureText(lbl).width + 14;
+
+        // Position label banner so it never clips outside top canvas boundary
+        const bannerY = (by >= 26) ? (by - 24) : by;
+        const textY = (by >= 26) ? (by - 8) : (by + 16);
+
+        uploadCtx.fillRect(bx, bannerY, tw, 22);
+        uploadCtx.fillStyle = '#ffffff';
+        uploadCtx.fillText(lbl, bx + 6, textY);
     });
 
-    if (resultCard) resultCard.className = isReal ? 'result-card threat-high' : 'result-card threat-low';
+    if (resultCard) {
+        resultCard.className = isReal ? 'result-card threat-high' : (isToy ? 'result-card threat-low' : 'result-card');
+    }
     if (resultClass) {
-        resultClass.textContent = isReal ? '🚨 Real Weapon Detected' : '⚡ Toy Weapon Detected';
-        resultClass.style.color = isReal ? '#ff3366' : '#ffaa00';
+        if (isReal) {
+            resultClass.textContent = '🚨 Real Weapon Detected';
+            resultClass.style.color = '#ff3366';
+        } else if (isToy) {
+            resultClass.textContent = '⚡ Toy Weapon Detected';
+            resultClass.style.color = '#ffaa00';
+        } else {
+            resultClass.textContent = '⚠️ Ambiguous / Uncertain Object';
+            resultClass.style.color = '#00d4ff';
+        }
     }
     if (threatBadge) {
-        threatBadge.textContent = isReal ? 'HIGH THREAT' : 'LOW THREAT (TOY)';
-        threatBadge.className = isReal ? 'threat-badge high' : 'threat-badge low';
+        if (isReal) {
+            threatBadge.textContent = 'HIGH THREAT';
+            threatBadge.className = 'threat-badge high';
+        } else if (isToy) {
+            threatBadge.textContent = 'LOW THREAT (TOY)';
+            threatBadge.className = 'threat-badge low';
+        } else {
+            threatBadge.textContent = 'CAUTION (UNCERTAIN)';
+            threatBadge.className = 'threat-badge';
+            threatBadge.style.background = 'rgba(0, 212, 255, 0.15)';
+            threatBadge.style.color = '#00d4ff';
+        }
     }
     if (confidenceFill) {
         confidenceFill.className = isReal ? 'confidence-fill high' : 'confidence-fill low';
@@ -405,8 +460,8 @@ function handleUploadResults(detections, procTime) {
     }
     if (confidenceValue) confidenceValue.textContent = `${conf}%`;
     if (threatLevel) {
-        threatLevel.textContent = isReal ? 'HIGH' : 'LOW';
-        threatLevel.style.color = isReal ? '#ff3366' : '#ffaa00';
+        threatLevel.textContent = isReal ? 'HIGH' : (isToy ? 'LOW' : 'CAUTION');
+        threatLevel.style.color = isReal ? '#ff3366' : (isToy ? '#ffaa00' : '#00d4ff');
     }
 }
 
@@ -989,3 +1044,316 @@ document.querySelectorAll('.metric-progress').forEach(circle => {
 });
 
 console.log('🛡️ Weapon Detection AI Frontend & Real AI Pipeline initialized');
+
+// ===== VIDEO UPLOAD & ANALYSIS LOGIC =====
+const videoUploadZone = document.getElementById('videoUploadZone');
+const videoFileInput = document.getElementById('videoFileInput');
+const videoFileInfo = document.getElementById('videoFileInfo');
+const videoFileName = document.getElementById('videoFileName');
+const videoFileMeta = document.getElementById('videoFileMeta');
+const removeVideoBtn = document.getElementById('removeVideoBtn');
+
+const videoConfSlider = document.getElementById('videoConfSlider');
+const videoConfVal = document.getElementById('videoConfVal');
+const frameStrideSelect = document.getElementById('frameStrideSelect');
+const startVideoAnalysisBtn = document.getElementById('startVideoAnalysisBtn');
+
+const videoProgressContainer = document.getElementById('videoProgressContainer');
+const videoProgressStatus = document.getElementById('videoProgressStatus');
+const videoProgressPercent = document.getElementById('videoProgressPercent');
+const videoProgressFill = document.getElementById('videoProgressFill');
+const videoProgressMeta = document.getElementById('videoProgressMeta');
+
+const videoPlaceholder = document.getElementById('videoPlaceholder');
+const annotatedVideoPlayer = document.getElementById('annotatedVideoPlayer');
+const videoSummaryStats = document.getElementById('videoSummaryStats');
+const vidRealCount = document.getElementById('vidRealCount');
+const vidToyCount = document.getElementById('vidToyCount');
+const vidThreatLevel = document.getElementById('vidThreatLevel');
+const videoTimelineWrapper = document.getElementById('videoTimelineWrapper');
+const videoTimelineList = document.getElementById('videoTimelineList');
+const videoDownloadArea = document.getElementById('videoDownloadArea');
+const downloadVideoBtn = document.getElementById('downloadVideoBtn');
+
+let selectedVideoFile = null;
+let videoPollInterval = null;
+
+if (videoConfSlider && videoConfVal) {
+    videoConfSlider.addEventListener('input', (e) => {
+        videoConfVal.textContent = `${e.target.value}%`;
+    });
+}
+
+if (videoUploadZone && videoFileInput) {
+    videoUploadZone.addEventListener('click', () => videoFileInput.click());
+
+    videoUploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        videoUploadZone.classList.add('drag-over');
+    });
+
+    videoUploadZone.addEventListener('dragleave', () => {
+        videoUploadZone.classList.remove('drag-over');
+    });
+
+    videoUploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        videoUploadZone.classList.remove('drag-over');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleSelectedVideo(e.dataTransfer.files[0]);
+        }
+    });
+
+    videoFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            handleSelectedVideo(e.target.files[0]);
+        }
+    });
+}
+
+if (removeVideoBtn) {
+    removeVideoBtn.addEventListener('click', () => {
+        resetVideoUpload();
+    });
+}
+
+function handleSelectedVideo(file) {
+    const validExtensions = ['.mp4', '.avi', '.mov', '.mkv', '.webm'];
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+
+    if (!validExtensions.includes(ext) && !file.type.startsWith('video/')) {
+        alert(`⚠️ Unsupported format.\n\nPlease select a video file (${validExtensions.join(', ')}).`);
+        return;
+    }
+
+    const maxBytes = 100 * 1024 * 1024; // 100 MB
+    if (file.size > maxBytes) {
+        alert('⚠️ File too large.\n\nMaximum video size is 100 MB.');
+        return;
+    }
+
+    selectedVideoFile = file;
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+
+    if (videoFileName) videoFileName.textContent = file.name;
+    if (videoFileMeta) videoFileMeta.textContent = `${sizeMb} MB • Ready for analysis`;
+    if (videoFileInfo) videoFileInfo.style.display = 'flex';
+    if (videoUploadZone) videoUploadZone.style.display = 'none';
+    if (startVideoAnalysisBtn) {
+        startVideoAnalysisBtn.disabled = false;
+        startVideoAnalysisBtn.innerHTML = '<span class="btn-icon">&#9658;</span> Analyze Video';
+    }
+
+    // Immediately show the selected/uploaded video on the side player!
+    const videoUrl = URL.createObjectURL(file);
+    const videoPreviewHeader = document.getElementById('videoPreviewHeader');
+    const previewBadge = document.getElementById('previewBadge');
+    const previewFilename = document.getElementById('previewFilename');
+
+    if (videoPlaceholder) videoPlaceholder.style.display = 'none';
+    if (annotatedVideoPlayer) {
+        annotatedVideoPlayer.style.display = 'block';
+        annotatedVideoPlayer.src = videoUrl;
+        annotatedVideoPlayer.load();
+    }
+    if (videoPreviewHeader) videoPreviewHeader.style.display = 'flex';
+    if (previewBadge) {
+        previewBadge.textContent = '📹 Uploaded Video Preview';
+        previewBadge.className = 'preview-badge';
+    }
+    if (previewFilename) previewFilename.textContent = file.name;
+
+    // Reset results areas until analysis runs
+    if (videoSummaryStats) videoSummaryStats.style.display = 'none';
+    if (videoTimelineWrapper) videoTimelineWrapper.style.display = 'none';
+    if (videoDownloadArea) videoDownloadArea.style.display = 'none';
+}
+
+function resetVideoUpload() {
+    selectedVideoFile = null;
+    if (videoFileInput) videoFileInput.value = '';
+    if (videoFileInfo) videoFileInfo.style.display = 'none';
+    if (videoUploadZone) videoUploadZone.style.display = 'block';
+    if (startVideoAnalysisBtn) {
+        startVideoAnalysisBtn.disabled = true;
+        startVideoAnalysisBtn.innerHTML = '<span class="btn-icon">&#9658;</span> Analyze Video';
+    }
+    if (videoProgressContainer) videoProgressContainer.style.display = 'none';
+    if (videoPollInterval) {
+        clearInterval(videoPollInterval);
+        videoPollInterval = null;
+    }
+
+    // Reset video player and show placeholder
+    const videoPreviewHeader = document.getElementById('videoPreviewHeader');
+    if (videoPreviewHeader) videoPreviewHeader.style.display = 'none';
+    if (annotatedVideoPlayer) {
+        annotatedVideoPlayer.pause();
+        annotatedVideoPlayer.src = '';
+        annotatedVideoPlayer.style.display = 'none';
+    }
+    if (videoPlaceholder) videoPlaceholder.style.display = 'flex';
+    if (videoSummaryStats) videoSummaryStats.style.display = 'none';
+    if (videoTimelineWrapper) videoTimelineWrapper.style.display = 'none';
+    if (videoDownloadArea) videoDownloadArea.style.display = 'none';
+}
+
+if (startVideoAnalysisBtn) {
+    startVideoAnalysisBtn.addEventListener('click', async () => {
+        if (!selectedVideoFile) return;
+
+        if (!isBackendOnline) {
+            alert('⚠️ AI Engine is Offline.\n\nPlease start the backend server via run_backend.bat or run: python backend.py');
+            return;
+        }
+
+        const confThresh = videoConfSlider ? (parseInt(videoConfSlider.value, 10) / 100) : 0.20;
+        const frameStride = frameStrideSelect ? parseInt(frameStrideSelect.value, 10) : 2;
+
+        startVideoAnalysisBtn.disabled = true;
+        startVideoAnalysisBtn.innerHTML = '⏳ Uploading Video...';
+
+        if (videoProgressContainer) videoProgressContainer.style.display = 'flex';
+        if (videoProgressFill) videoProgressFill.style.width = '0%';
+        if (videoProgressPercent) videoProgressPercent.textContent = '0%';
+        if (videoProgressStatus) videoProgressStatus.textContent = 'Uploading video to server...';
+        if (videoProgressMeta) videoProgressMeta.textContent = 'Preparing pipeline...';
+
+        const formData = new FormData();
+        formData.append('file', selectedVideoFile);
+        formData.append('conf_threshold', confThresh);
+        formData.append('frame_stride', frameStride);
+
+        try {
+            const res = await fetch(`${API_BASE}/detect/video`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({ detail: 'Upload error' }));
+                throw new Error(errData.detail || 'Upload failed');
+            }
+
+            const data = await res.json();
+            const jobId = data.job_id;
+
+            if (videoProgressStatus) videoProgressStatus.textContent = 'Analyzing frames & tracking threats...';
+            startVideoAnalysisBtn.innerHTML = '⚡ Processing Video...';
+
+            pollVideoJob(jobId);
+
+        } catch (err) {
+            console.error('Video upload failed:', err);
+            alert(`⚠️ Video analysis error: ${err.message}`);
+            if (videoProgressContainer) videoProgressContainer.style.display = 'none';
+            startVideoAnalysisBtn.disabled = false;
+            startVideoAnalysisBtn.innerHTML = '<span class="btn-icon">&#9658;</span> Analyze Video';
+        }
+    });
+}
+
+function pollVideoJob(jobId) {
+    if (videoPollInterval) clearInterval(videoPollInterval);
+
+    videoPollInterval = setInterval(async () => {
+        try {
+            const res = await fetch(`${API_BASE}/video/status/${jobId}`);
+            if (!res.ok) throw new Error('Job status query failed');
+
+            const job = await res.json();
+            const pct = job.progress_percent || 0;
+
+            if (videoProgressFill) videoProgressFill.style.width = `${pct}%`;
+            if (videoProgressPercent) videoProgressPercent.textContent = `${Math.round(pct)}%`;
+            if (videoProgressMeta) {
+                videoProgressMeta.textContent = `Frames: ${job.current_frame || 0} / ${job.total_frames || '?'} • FPS: ${job.fps ? Math.round(job.fps) : '--'}`;
+            }
+
+            if (job.status === 'completed') {
+                clearInterval(videoPollInterval);
+                videoPollInterval = null;
+                handleVideoJobSuccess(job);
+            } else if (job.status === 'failed') {
+                clearInterval(videoPollInterval);
+                videoPollInterval = null;
+                alert(`⚠️ Video processing failed:\n\n${job.error || 'Unknown error'}`);
+                if (videoProgressContainer) videoProgressContainer.style.display = 'none';
+                startVideoAnalysisBtn.disabled = false;
+                startVideoAnalysisBtn.innerHTML = '<span class="btn-icon">&#9658;</span> Retry Analysis';
+            }
+        } catch (err) {
+            console.warn('Polling error:', err);
+        }
+    }, 800);
+}
+
+function handleVideoJobSuccess(job) {
+    if (videoProgressContainer) videoProgressContainer.style.display = 'none';
+    if (startVideoAnalysisBtn) {
+        startVideoAnalysisBtn.disabled = false;
+        startVideoAnalysisBtn.innerHTML = '✓ Video Analyzed';
+    }
+
+    // Update Preview Badge and Video Player to Annotated Stream
+    const previewBadge = document.getElementById('previewBadge');
+    if (previewBadge) {
+        previewBadge.textContent = '🚨 Annotated Threat Video (AI Detection Complete)';
+        previewBadge.className = 'preview-badge annotated';
+    }
+
+    if (videoPlaceholder) videoPlaceholder.style.display = 'none';
+    if (annotatedVideoPlayer) {
+        annotatedVideoPlayer.style.display = 'block';
+        annotatedVideoPlayer.src = `${API_BASE}/stream/video/${job.job_id}`;
+        annotatedVideoPlayer.load();
+        annotatedVideoPlayer.play().catch(() => {});
+    }
+
+    // Display Download Link
+    if (videoDownloadArea && downloadVideoBtn) {
+        videoDownloadArea.style.display = 'block';
+        downloadVideoBtn.href = `${API_BASE}/download/video/${job.job_id}`;
+        downloadVideoBtn.setAttribute('download', `annotated_threats_${job.job_id.slice(0, 8)}.mp4`);
+    }
+
+    // Populate Summary Counters
+    const summary = job.summary || {};
+    if (videoSummaryStats) videoSummaryStats.style.display = 'grid';
+    if (vidRealCount) vidRealCount.textContent = summary.real_weapons || 0;
+    if (vidToyCount) vidToyCount.textContent = summary.toy_weapons || 0;
+    if (vidThreatLevel) {
+        const lvl = summary.highest_threat || 'NONE';
+        vidThreatLevel.textContent = lvl;
+        vidThreatLevel.style.color = lvl === 'HIGH' ? '#ff3366' : (lvl === 'LOW' ? '#ffaa00' : '#00ff88');
+    }
+
+    // Populate Detection Timeline
+    if (videoTimelineWrapper && videoTimelineList) {
+        videoTimelineList.innerHTML = '';
+        const timeline = summary.timeline || [];
+
+        if (timeline.length === 0) {
+            videoTimelineList.innerHTML = '<span style="color: #00ff88; font-size: 0.85rem;">✅ No weapons detected across video frames.</span>';
+        } else {
+            timeline.forEach(ev => {
+                const pill = document.createElement('div');
+                const catClass = ev.category === 'REAL_WEAPON' ? 'real' : (ev.category === 'TOY_WEAPON' ? 'toy' : 'uncertain');
+                pill.className = `timeline-pill ${catClass}`;
+                pill.innerHTML = `
+                    <span class="pill-time">⏱ ${ev.timestamp_sec}s</span>
+                    <span>${ev.class} (${ev.confidence}%)</span>
+                `;
+                pill.title = `Click to jump to ${ev.timestamp_sec}s in video`;
+                pill.addEventListener('click', () => {
+                    if (annotatedVideoPlayer) {
+                        annotatedVideoPlayer.currentTime = Math.max(0, ev.timestamp_sec - 0.5);
+                        annotatedVideoPlayer.play();
+                    }
+                });
+                videoTimelineList.appendChild(pill);
+            });
+        }
+        videoTimelineWrapper.style.display = 'block';
+    }
+}

@@ -1,219 +1,195 @@
-<div align="center">
+# AI Weapon Detection & Threat Classification System
 
-# 🛡️ AI Weapon & Threat Detection System
-
-An end-to-end, real-time computer vision system that detects weapons, separates **real threats** from **toy replicas**, and suppresses false alarms from **2D weapon prints** on clothing and posters.
-
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![YOLO11](https://img.shields.io/badge/YOLO11-Ultralytics-00FFFF?style=for-the-badge)](https://docs.ultralytics.com/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
-[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-
-**[Features](#-features) · [Architecture](#-architecture) · [Quick Start](#-quick-start) · [Training](#-training-pipeline) · [Project Structure](#-project-structure) · [Roadmap](#-roadmap)**
-
-</div>
+An advanced, real-time Computer Vision security system powered by **YOLO11s**, **PyTorch**, **OpenCV**, and **FastAPI**, with a cyberpunk-styled responsive dashboard for live webcam analysis, image scanning, and automated video surveillance.
 
 ---
 
-## 📸 Demo
+## 📌 Key Capabilities
 
-<div align="center">
-
-### 🔴 Live Detection
-<img src="https://raw.githubusercontent.com/furqanzubair209-cell/ai-weapon-threat-detection/main/images/live detection.png" alt="Live webcam detection of a pistol with threat classification" width="100%"/>
-
-*Live webcam feed with bounding boxes, threat level, per-class confidence bars, and detection log*
-
-<br/>
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="https://raw.githubusercontent.com/furqanzubair209-cell/ai-weapon-threat-detection/main/images/gun detection.png" alt="Real weapon detection on a toy-like pistol image" width="100%"/>
-      <br/><sub><b>Image Analysis: Real Weapon (Gun)</b></sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="https://raw.githubusercontent.com/furqanzubair209-cell/ai-weapon-threat-detection/main/images/knife detection.png" alt="Knife detection on a wooden surface" width="100%"/>
-      <br/><sub><b>Image Analysis: Real Weapon (Knife)</b></sub>
-    </td>
-  </tr>
-</table>
-
-</div>
+- **Real-Time Weapon Detection**: Handguns, pistols, revolvers, knives, machetes, and bladed threats detected with sub-30ms latency on GPU and ~80ms on CPU.
+- **Physical vs. Printed-Depiction Analysis**: Filters out flat 2D weapon illustrations printed on t-shirts, posters, or stickers to eliminate false alarms without suppressing real weapons.
+- **Toy vs. Real Weapon Classification**: Distinguishes real firearms/knives from toy replicas, nerf blasters, and water guns based on colorimetry (safety blaze orange tips) and trained feature margins.
+- **Strict Threat Categorization**:
+  - `REAL_WEAPON`: Confirmed physical firearm or knife (HIGH threat alert).
+  - `TOY_WEAPON`: Toy gun or replica (LOW threat advisory).
+  - `NO_WEAPON`: Weapon-free frame or flat printed depiction filtered out.
+  - `UNCERTAIN`: Borderline confidence or ambiguous silhouette requiring human verification.
+- **Full Video Upload & Analysis**: Ingests `.mp4`, `.avi`, `.mov`, `.mkv`, and `.webm` surveillance footage, analyzes frames, overlays bounding boxes and HUD diagnostics, and exports a downloadable annotated video with interactive jump-to-timestamp navigation.
+- **Live Camera Studio**: Real-time snapshot capture and multi-threat confidence meters.
 
 ---
 
-## ✨ Features
+## 🔬 Model Verification & Checkpoint Provenance
 
-| | Feature | Description |
-|---|---|---|
-| 🎯 | **Real-Time Detection** | YOLO11s inference served through a low-latency FastAPI backend |
-| 🔫 | **Dual-Tier Classification** | Separates **real weapons** (firearms, combat knives) from **toy weapons** (replicas) |
-| 🧠 | **Hard-Negative Mining** | Trained on 2D drawings, posters, and illustrations with empty labels to cut false positives |
-| 📷 | **Live Webcam Support** | Browser-based dashboard streams directly from the device camera |
-| 📊 | **Confidence Metrics** | Per-detection confidence scores displayed in the UI |
-| 🎚️ | **Adjustable Thresholds** | Tune sensitivity on the fly to match your deployment environment |
-| 🪟 | **One-Click Launch** | `run_project.bat` starts the backend and dashboard on Windows |
+The system uses a two-phase trained YOLO11s checkpoint:
+1. **Phase 1 Baseline Training (`weapon_yolo11s-2`)**:
+   - Architecture: Ultralytics YOLO11s (9.42M parameters, 21.4 GFLOPs)
+   - Dataset: 3,385 train, 725 val, 727 test images (Sohas knives + Armas firearms + background negatives)
+   - Duration: 100 epochs with AdamW optimizer, cosine learning rate scheduling, and mosaic augmentation.
+   - Result: Reached peak mAP@50 of **88.1%** and mAP@50-95 of **61.2%** at epoch 79.
+2. **Phase 2 Fine-Tuning (`weapon_yolo11s_toy_finetune`)**:
+   - Initial Weights: Resumed from `weapon_yolo11s-2/weights/best.pt`
+   - Dataset: Augmented with Roboflow toy firearm dataset (expanded toy weapon samples from 217 to 907; 4,072 total training images)
+   - Duration: 25 epochs at reduced learning rate (`lr0=0.0002`).
+   - Result: Elevated overall mAP@50 to **90.84%** and mAP@50-95 to **67.31%**.
+   - Test Split Benchmark (727 unseen images):
+     - **Overall Precision**: **92.7%**
+     - **Overall Recall**: **89.3%**
+     - **Overall F1-Score**: **90.9%**
+     - **Real Weapon mAP@50**: **85.1%**
+     - **Toy Weapon mAP@50**: **91.8%**
 
----
-
-## 🏗️ Architecture
-
-```mermaid
-flowchart LR
-    A[📷 Webcam / Image Input] --> B[🌐 Web Dashboard<br/>HTML · CSS · JS]
-    B -->|Frames via HTTP| C[⚡ FastAPI Backend<br/>backend.py]
-    C --> D[🧠 YOLO11s Model<br/>best.pt · PyTorch]
-    D --> E[🔍 OpenCV<br/>Pre/Post-processing]
-    E -->|Boxes · Labels · Confidence| C
-    C -->|JSON Response| B
-    B --> F[🚨 Visual Alerts<br/>Real vs Toy Threat Levels]
-
-    style D fill:#00FFFF,stroke:#0a0a0a,color:#000
-    style C fill:#009688,stroke:#0a0a0a,color:#fff
-    style F fill:#EE4C2C,stroke:#0a0a0a,color:#fff
-```
+> **Checkpoint Status**: The root `best.pt` file was verified by safe dictionary metadata inspection to be identical to `training/weapon_yolo11s_toy_finetune/weights/best.pt` (Phase 2, Epoch 25), confirming all 125 total training epochs are incorporated. A pristine backup is preserved at `best.pt.backup`.
 
 ---
 
-## 🛠️ Tech Stack
-
-| Layer | Technologies |
-|---|---|
-| **Model** | YOLO11s (Ultralytics), PyTorch |
-| **Vision** | OpenCV |
-| **Backend** | FastAPI, Uvicorn, Python |
-| **Frontend** | HTML5, CSS3, JavaScript |
-| **Training** | Google Colab, Jupyter Notebook |
-
----
-
-## 🚀 Quick Start
+## 🛠️ Installation & Setup
 
 ### Prerequisites
+- Windows 10/11 or Linux
+- Python 3.10+ (Anaconda or standard Python)
+- Optional: NVIDIA GPU with CUDA for real-time video batch acceleration
 
-- Python **3.10+**
-- A webcam (optional, for live detection)
-- Windows is recommended for the one-click launcher; the manual steps work on any OS
-
-### 1. Clone the repository
-
+### 1. Clone & Enter Project
 ```bash
-git clone https://github.com/furqanzubair209-cell/ai-weapon-threat-detection.git
-cd ai-weapon-threat-detection
+cd c:\Users\DELL\OneDrive\Desktop\weapon_detection_project
 ```
 
-### 2. Install dependencies
-
+### 2. Install Dependencies
 ```bash
-python -m venv venv
-venv\Scripts\activate          # Windows
-# source venv/bin/activate     # macOS / Linux
-
 pip install -r requirements.txt
 ```
 
-### 3. Run the application
+---
 
-**Option A: One-click (Windows)**
+## 🚀 Running the System
 
-```bat
+### Option A — Automated Startup (One-Click)
+Double-click or run:
+```cmd
 run_project.bat
 ```
+This batch script sets the OpenMP environment workarounds, initializes the FastAPI backend, and automatically opens your default browser at `http://127.0.0.1:8000`.
 
-**Option B: Manual**
+### Option B — Manual FastAPI Backend
+```bash
+python backend.py
+```
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your web browser.
+
+### Option C — Alternative Streamlit App
+```cmd
+run_app.bat
+```
+Launches the secondary Streamlit dashboard at `http://localhost:8501`.
+
+---
+
+## 📡 API Reference
+
+### Health & Model Diagnostics
+- **`GET /health`**
+  - Returns backend status, loaded model weights, and active detection categories.
+
+### Image Analysis
+- **`POST /detect`**
+  - **Body**: `{"image": "data:image/jpeg;base64,...", "conf_threshold": 0.20}`
+  - **Response**:
+    ```json
+    {
+      "status": "success",
+      "detections": [
+        {
+          "class": "Real Weapon (Gun/Knife)",
+          "category": "REAL_WEAPON",
+          "threat_level": "HIGH",
+          "confidence": 91.4,
+          "bbox": {"x": 0.24, "y": 0.18, "w": 0.35, "h": 0.42}
+        }
+      ],
+      "count": 1,
+      "processing_time_ms": 28.4,
+      "image_size": [640, 480]
+    }
+    ```
+- **`POST /detect/file`**
+  - Multipart form upload for raw image files (`.jpg`, `.png`, `.webp`).
+
+### Video Analysis Pipeline
+- **`POST /detect/video`**
+  - **Form Data**:
+    - `file`: Video binary (`.mp4`, `.avi`, `.mov`, `.mkv`, `.webm`, max 100MB)
+    - `conf_threshold`: Float (default `0.20`)
+    - `frame_stride`: Integer (default `2` = analyze every 2nd frame)
+  - **Response**: `{"job_id": "...", "status": "queued", "status_url": "/video/status/{job_id}"}`
+
+- **`GET /video/status/{job_id}`**
+  - Polling endpoint returning `progress_percent`, `current_frame`, `total_frames`, and detection summaries upon completion.
+
+- **`GET /download/video/{job_id}`**
+  - Streams or downloads the annotated `.mp4` video with bounding boxes and HUD timestamps.
+
+- **`GET /stream/video/{job_id}`**
+  - In-browser playback stream for previewing processed videos.
+
+---
+
+## 🧪 Automated Testing
+
+A comprehensive test suite is provided in `tests/`:
 
 ```bash
-uvicorn backend:app --host 127.0.0.1 --port 8000
+pytest tests -v
 ```
 
-Then open **http://127.0.0.1:8000** in your browser, allow webcam access, and start detecting.
-
-> The trained weights (`best.pt`) are included in the repository, so the project runs immediately with no extra downloads.
-
----
-
-## 🧪 Training Pipeline
-
-The full training workflow lives in [`Weapon_Detection_System.ipynb`](Weapon_Detection_System.ipynb):
-
-1. **Dataset curation**: collecting and organizing real weapon, toy weapon, and negative samples
-2. **Hard-negative mining**: adding 2D weapon graphics (prints, posters, drawings) with empty label files so the model learns to ignore them
-3. **Annotation conversion**: converting XML annotations to the YOLO format
-4. **Two-stage training** with YOLO11s in PyTorch:
-   - **Stage 1: Base training** for 100 epochs on the curated dataset
-   - **Stage 2: Fine-tuning** for an additional 25 epochs to refine the model
-5. **Export**: saving the best checkpoint as `best.pt` for deployment
+### Verified Test Cases:
+1. `test_health_endpoint`: API health and metadata validation.
+2. `test_detect_image_base64`: Base64 inference and response schema.
+3. `test_detect_image_invalid_base64`: Graceful handling of corrupted payloads.
+4. `test_detect_image_file_multipart`: Multipart file uploads.
+5. `test_video_analysis_workflow`: Full end-to-end video upload, frame processing, polling, and H.264 video generation.
+6. `test_video_upload_validation_errors`: Rejection of invalid file extensions, oversized files, empty uploads, and path traversal attempts.
+7. `test_model_loading`: Checkpoint verification and class mapping.
+8. `test_physical_vs_depiction_analysis`: Edge, texture, and entropy analysis for shirt prints.
+9. `test_toy_color_heuristics`: Colorimetry verification for blaze orange safety tips.
+10. `test_categorize_detection`: Multi-tier categorization into `REAL_WEAPON`, `TOY_WEAPON`, `NO_WEAPON`, and `UNCERTAIN`.
+11. `test_predict_image_execution`: Full inference pipeline execution.
 
 ---
 
-## 📈 Results & Evaluation
+## 📁 Project Architecture
 
-Evaluated on the held-out test split of the fine-tuned dataset:
-
-| Metric | Value | Description |
-|---|:---:|---|
-| **mAP@0.5** | **90.8%** | Peak reached **93.3%** during training |
-| **mAP@0.5:0.95** | **67.3%** | Strict multi-threshold COCO metric |
-| **Precision** | **90.9%** | Low false alarm rate |
-| **Recall** | **85.2%** | High threat capture rate |
-| **Inference Latency** | **~30 ms** | Fast real-time throughput on standard hardware |
-
-> **Hard-Negative Accuracy:** The model suppresses 2D weapon graphics on t-shirts, posters, and flat surfaces, with near-zero false alarms on the tested representation images.
-
----
-
-## 📁 Project Structure
-
-```text
-ai-weapon-threat-detection/
-├── frontend/                       # Web dashboard (HTML / CSS / JS)
-├── images/                         # Dashboard screenshots for this README
-├── backend.py                      # FastAPI inference server
-├── best.pt                         # Fine-tuned YOLO11s weights
-├── Weapon_Detection_System.ipynb   # Dataset, training, and export notebook
-├── requirements.txt                # Python dependencies
-├── run_project.bat                 # Windows one-click launcher
-└── README.md                       # Project documentation
+```
+weapon_detection_project/
+├── backend.py                   # FastAPI REST API & static server
+├── best.pt                      # YOLO11s trained weights (125 epochs)
+├── best.pt.backup               # Original backup copy of weights
+├── requirements.txt             # Project dependencies
+├── run_project.bat              # One-click Windows launch script
+├── run_backend.bat              # Backend launcher
+├── run_app.bat                  # Streamlit launcher
+├── app.py                       # Alternative Streamlit dashboard
+├── pipeline/                    # Modular AI pipeline
+│   ├── classifier.py            # Depiction & toy weapon classifier
+│   ├── detector.py              # YOLO11s inference & annotation
+│   └── video_processor.py       # Frame processing & MP4 encoder
+├── frontend/                    # Web UI
+│   ├── index.html               # Main dashboard with video upload
+│   ├── styles.css               # Cyberpunk neon responsive styles
+│   └── script.js                # Async client & video polling
+├── tests/                       # Automated test suite
+│   ├── test_backend.py          # API & video endpoint tests
+│   └── test_pipeline.py         # Model & classification unit tests
+└── training/                    # Training logs and validation curves
+    ├── weapon_yolo11s-2/        # Phase 1 (100 epochs baseline)
+    └── weapon_yolo11s_toy_finetune/ # Phase 2 (25 epochs fine-tune)
 ```
 
 ---
 
-## 🗺️ Roadmap
+## 🛡️ Security & Reliability Features
 
-- [ ] Multi-camera stream support (RTSP)
-- [ ] Alert logging with timestamps and snapshots
-- [ ] Export to ONNX / TensorRT for edge deployment
-- [ ] Docker container for one-command setup
-
----
-
-## 👨‍💻 Author
-
-**Muhammad Furqan**: Frontend Software Engineer & Computer Science Undergraduate, Lahore, Pakistan
-
-[![Portfolio](https://img.shields.io/badge/Portfolio-furqannewportfolio.netlify.app-000000?style=flat-square&logo=netlify&logoColor=white)](https://furqannewportfolio.netlify.app)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-muhammad--furqan-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/muhammad-furqan-228807304)
-[![GitHub](https://img.shields.io/badge/GitHub-furqanzubair209--cell-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/furqanzubair209-cell)
-
----
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome. Feel free to open an [issue](https://github.com/furqanzubair209-cell/ai-weapon-threat-detection/issues) or submit a pull request.
-
----
-
-## ⚠️ Disclaimer
-
-This project is intended for **research, education, and security-system prototyping**. Automated detection should always be paired with human review. It is not a substitute for certified security infrastructure or law enforcement response.
-
----
-
-<div align="center">
-
-**If you found this project useful, please consider giving it a ⭐**
-
-</div>
+- **Path Traversal Protection**: Job IDs are validated using UUID regex; download paths are strictly restricted to the temporary outputs directory.
+- **Safe File Deletion**: Temporary video uploads and outputs older than 1 hour are automatically purged to prevent disk saturation.
+- **Resource Protection**: Enforces maximum upload sizes (100MB) and maximum video durations (180s).
+- **Asynchronous Processing**: Long-running video analysis runs as background tasks, preventing HTTP timeout and keeping the UI responsive.

@@ -73,7 +73,7 @@ def serve_js():
 
 class Base64Payload(BaseModel):
     image: str
-    conf_threshold: Optional[float] = 0.12
+    conf_threshold: Optional[float] = 0.08
 
 
 @app.get("/health")
@@ -109,7 +109,7 @@ async def detect_image(payload: Base64Payload):
             content={"error": f"Invalid image format: {str(e)}", "detections": []}
         )
 
-    conf_thresh = payload.conf_threshold if payload.conf_threshold is not None else 0.12
+    conf_thresh = payload.conf_threshold if payload.conf_threshold is not None else 0.08
 
     # Run detection with physical depiction analysis
     result = detector.predict_image(
