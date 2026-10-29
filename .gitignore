@@ -1,0 +1,28 @@
+
+# Python cache and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Datasets and training artifacts
+final_dataset/
+hard_negatives/
+toy_dataset_raw/
+yolo_dataset/
+training/
+evaluation/
+
+# Duplicate model backup
+best.pt.backup
+*.backup
+
+# Runtime-generated files
+temp_storage/
+*.log
+
+# Streamlit-only application files
+app.py
+run_app.bat
+
+# Temporary image
+ab.jpeg
