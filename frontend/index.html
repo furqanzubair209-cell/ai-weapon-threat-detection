@@ -120,8 +120,8 @@
                         </button>
                     </div>
                     <div class="conf-slider-wrap" style="margin-top: 14px;">
-                        <label for="imgConfSlider">Sensitivity: <span id="imgConfSliderVal">8%</span> (Optimized for knives &amp; concealed weapons)</label>
-                        <input type="range" id="imgConfSlider" min="3" max="50" value="8" step="1">
+                        <label for="imgConfSlider">Sensitivity: <span id="imgConfSliderVal">15%</span> (Optimized for knives, firearms &amp; toys)</label>
+                        <input type="range" id="imgConfSlider" min="5" max="50" value="15" step="1">
                     </div>
                 </div>
                 <div class="detection-preview" id="detectionPreview">
@@ -177,8 +177,8 @@
                 <h2 class="section-title">Webcam <span class="gradient-text">Snapshot Detection</span></h2>
                 <p class="section-desc">Stream your camera live, then click <strong>Capture &amp; Predict</strong> to take a photo and detect weapons with YOLO11s AI.</p>
                 <div class="conf-slider-wrap">
-                    <label for="confSlider">Confidence Threshold: <span id="confSliderVal">20%</span> (Lower for knives & toys)</label>
-                    <input type="range" id="confSlider" min="10" max="80" value="20" step="5">
+                    <label for="confSlider">Confidence Threshold: <span id="confSliderVal">15%</span> (Optimized for knives, firearms &amp; toys)</label>
+                    <input type="range" id="confSlider" min="5" max="80" value="15" step="1">
                 </div>
             </div>
             <div class="live-detection-wrapper">
@@ -337,8 +337,8 @@
                     <!-- Video Processing Settings -->
                     <div class="video-settings-grid">
                         <div class="setting-item">
-                            <label for="videoConfSlider">Confidence: <span id="videoConfVal">20%</span></label>
-                            <input type="range" id="videoConfSlider" min="10" max="80" value="20" step="5">
+                            <label for="videoConfSlider">Confidence: <span id="videoConfVal">15%</span></label>
+                            <input type="range" id="videoConfSlider" min="5" max="80" value="15" step="1">
                         </div>
                         <div class="setting-item">
                             <label for="frameStrideSelect">Sampling Speed:</label>

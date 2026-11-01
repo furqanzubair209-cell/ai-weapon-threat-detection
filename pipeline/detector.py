@@ -2,7 +2,7 @@
 YOLO11s Weapon Detector Engine.
 
 Handles model loading, warm-up, inference, and bounding box drawing.
-Integrates depiction rejection and toy classification.
+Integrates depiction rejection, toy classification, and multi-scale TTA rescue pass.
 """
 
 import os
@@ -24,9 +24,8 @@ logger = logging.getLogger("WeaponDetector")
 # Color palette for categories (BGR for OpenCV, RGB/Hex for frontend)
 CATEGORY_COLORS = {
     "REAL_WEAPON": (51, 51, 255),      # Red / Crimson in BGR
-    "TOY_WEAPON": (0, 170, 255),      # Amber / Orange in BGR
-    "UNCERTAIN": (0, 215, 255),       # Yellow-Cyan in BGR
-    "NO_WEAPON": (100, 255, 100),     # Soft Green in BGR
+    "TOY_WEAPON": (0, 170, 255),       # Amber / Orange in BGR
+    "NO_WEAPON": (100, 255, 100),      # Soft Green in BGR
 }
 
 class WeaponDetector:
@@ -59,16 +58,62 @@ class WeaponDetector:
                 return c
         return candidates[0]
 
+    @staticmethod
+    def _suppress_overlapping_boxes(detections: List[Dict[str, Any]], iomin_thresh: float = 0.40) -> List[Dict[str, Any]]:
+        """
+        Suppresses redundant overlapping or enclosing bounding boxes.
+        Keeps the primary higher-confidence detection and eliminates ghost/sub-boxes.
+        """
+        if len(detections) <= 1:
+            return detections
+
+        sorted_dets = sorted(detections, key=lambda d: (d.get("raw_confidence", 0.0), d.get("confidence", 0.0)), reverse=True)
+        kept = []
+
+        for det in sorted_dets:
+            boxA = det.get("bbox_px", [])
+            if len(boxA) != 4:
+                kept.append(det)
+                continue
+
+            suppressed = False
+            areaA = max(1, (boxA[2] - boxA[0]) * (boxA[3] - boxA[1]))
+
+            for k in kept:
+                boxB = k.get("bbox_px", [])
+                if len(boxB) != 4:
+                    continue
+
+                areaB = max(1, (boxB[2] - boxB[0]) * (boxB[3] - boxB[1]))
+                xA = max(boxA[0], boxB[0])
+                yA = max(boxA[1], boxB[1])
+                xB = min(boxA[2], boxB[2])
+                yB = min(boxA[3], boxB[3])
+
+                inter = max(0, xB - xA) * max(0, yB - yA)
+                min_area = min(areaA, areaB)
+
+                if min_area > 0 and (inter / float(min_area)) >= iomin_thresh:
+                    suppressed = True
+                    break
+
+            if not suppressed:
+                kept.append(det)
+
+        return kept
+
     def predict_image(
         self,
         image_input,  # PIL.Image or np.ndarray (BGR or RGB)
-        conf_threshold: float = 0.08,
+        conf_threshold: float = 0.05,
         iou_threshold: float = 0.45,
         imgsz: Optional[int] = None,
         filter_no_weapon: bool = True
     ) -> Dict[str, Any]:
         """
         Runs full inference on a single image.
+        Uses adaptive resolution and an augmented rescue pass to ensure no weapons
+        (especially thin knife blades and small objects) are missed.
         Returns detection objects, structured categories, and processing time.
         """
         start_time = time.time()
@@ -100,14 +145,32 @@ class WeaponDetector:
         else:
             inference_sz = imgsz
 
-        # Run Ultralytics YOLO inference with sensitive proposal threshold
+        proposal_conf = max(0.015, min(conf_threshold, 0.04))
+
+        # 1. Primary Ultralytics YOLO inference pass
         results = self.model.predict(
             source=cv_bgr,
-            conf=max(0.03, min(conf_threshold, 0.08)),
+            conf=proposal_conf,
             iou=iou_threshold,
             imgsz=inference_sz,
             verbose=False
         )
+
+        # 2. Augmented Rescue Pass (TTA):
+        # If no weapons detected on primary pass, run an augmented pass to rescue
+        # thin knife blades, distant firearms, or difficult lighting angles
+        has_boxes = (len(results) > 0 and results[0].boxes is not None and len(results[0].boxes) > 0)
+        if not has_boxes and conf_threshold <= 0.20:
+            results_aug = self.model.predict(
+                source=cv_bgr,
+                conf=0.015,
+                iou=iou_threshold,
+                imgsz=inference_sz,
+                augment=True,
+                verbose=False
+            )
+            if len(results_aug) > 0 and results_aug[0].boxes is not None and len(results_aug[0].boxes) > 0:
+                results = results_aug
 
         detections = []
         if len(results) > 0 and results[0].boxes is not None:
@@ -127,7 +190,7 @@ class WeaponDetector:
                 if x2_px > x1_px and y2_px > y1_px:
                     crop = cv_bgr[y1_px:y2_px, x1_px:x2_px]
 
-                # Categorize with physical-versus-depiction analysis
+                # Categorize with physical-versus-depiction analysis and calibrated confidence
                 cat_result = categorize_detection(
                     raw_cls_id=cls_id,
                     raw_conf=raw_conf,
@@ -137,7 +200,7 @@ class WeaponDetector:
 
                 category = cat_result["category"]
                 if filter_no_weapon and category == "NO_WEAPON":
-                    # Suppress flat print depictions or false alarms from final output
+                    # Suppress flat print depictions or weak false alarms from final output
                     continue
 
                 # Normalized coordinates (0.0 to 1.0)
@@ -151,8 +214,9 @@ class WeaponDetector:
                     "category": category,
                     "threat_level": cat_result["threat_level"],
                     "confidence": cat_result["confidence"],
+                    "raw_confidence": cat_result.get("raw_confidence", round(raw_conf * 100, 1)),
                     "raw_class_id": cls_id,
-                    "type": "real" if category == "REAL_WEAPON" else ("toy" if category == "TOY_WEAPON" else "other"),
+                    "type": "real" if category == "REAL_WEAPON" else "toy",
                     "verdict_reason": cat_result.get("verdict_reason", ""),
                     "bbox": {
                         "x": norm_x,
@@ -163,12 +227,16 @@ class WeaponDetector:
                     "bbox_px": [x1_px, y1_px, x2_px, y2_px]
                 })
 
+        # Suppress redundant overlapping or enclosing sub-boxes
+        cleaned_detections = self._suppress_overlapping_boxes(detections, iomin_thresh=0.40)
+        cleaned_detections.sort(key=lambda d: (d.get("raw_confidence", 0.0), d.get("confidence", 0.0)), reverse=True)
+
         proc_time = round((time.time() - start_time) * 1000, 1)
 
         return {
             "status": "success",
-            "detections": detections,
-            "count": len(detections),
+            "detections": cleaned_detections,
+            "count": len(cleaned_detections),
             "processing_time_ms": proc_time,
             "image_size": [img_w, img_h]
         }
@@ -186,8 +254,8 @@ class WeaponDetector:
         h, w = out.shape[:2]
 
         for det in detections:
-            cat = det.get("category", "UNCERTAIN")
-            color = CATEGORY_COLORS.get(cat, (200, 200, 200))
+            cat = det.get("category", "REAL_WEAPON")
+            color = CATEGORY_COLORS.get(cat, (51, 51, 255))
             bbox = det.get("bbox")
             if not bbox:
                 continue

@@ -73,7 +73,7 @@ def serve_js():
 
 class Base64Payload(BaseModel):
     image: str
-    conf_threshold: Optional[float] = 0.08
+    conf_threshold: Optional[float] = 0.15
 
 
 @app.get("/health")
@@ -84,7 +84,7 @@ def health_check():
         "model": "YOLO11s",
         "weights": os.path.basename(detector.model_path),
         "classes": list(detector.raw_names.values()),
-        "categories": ["REAL_WEAPON", "TOY_WEAPON", "NO_WEAPON", "UNCERTAIN"]
+        "categories": ["REAL_WEAPON", "TOY_WEAPON", "NO_WEAPON"]
     }
 
 
@@ -92,7 +92,7 @@ def health_check():
 async def detect_image(payload: Base64Payload):
     """
     Analyzes an uploaded image or webcam snapshot for weapons.
-    Classifies detections into REAL_WEAPON, TOY_WEAPON, and UNCERTAIN,
+    Classifies detections into REAL_WEAPON and TOY_WEAPON,
     while filtering flat printed depictions on garments.
     """
     img_data = payload.image
@@ -109,7 +109,7 @@ async def detect_image(payload: Base64Payload):
             content={"error": f"Invalid image format: {str(e)}", "detections": []}
         )
 
-    conf_thresh = payload.conf_threshold if payload.conf_threshold is not None else 0.08
+    conf_thresh = payload.conf_threshold if payload.conf_threshold is not None else 0.15
 
     # Run detection with physical depiction analysis
     result = detector.predict_image(
@@ -123,7 +123,7 @@ async def detect_image(payload: Base64Payload):
 @app.post("/detect/file")
 async def detect_image_file(
     file: UploadFile = File(...),
-    conf_threshold: float = Form(0.20)
+    conf_threshold: float = Form(0.15)
 ):
     """Multipart image upload endpoint."""
     if not file.content_type.startswith("image/"):
@@ -147,7 +147,7 @@ async def detect_image_file(
 async def detect_video(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    conf_threshold: float = Form(0.20),
+    conf_threshold: float = Form(0.15),
     frame_stride: int = Form(2)
 ):
     """

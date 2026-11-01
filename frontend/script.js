@@ -1,7 +1,7 @@
 // ===== CONFIGURATION & API BACKEND =====
 const API_BASE = window.location.protocol.startsWith('http') ? window.location.origin : 'http://127.0.0.1:8000';
 let isBackendOnline = false;
-let currentConfThreshold = 0.08;
+let currentConfThreshold = 0.15;
 
 // ===== NAVBAR SCROLL & MOBILE MENU =====
 const navbar = document.getElementById('navbar');
@@ -143,7 +143,7 @@ if (confSlider && confSliderVal) {
 const imgConfSlider = document.getElementById('imgConfSlider');
 const imgConfSliderVal = document.getElementById('imgConfSliderVal');
 if (imgConfSlider && imgConfSliderVal) {
-    currentConfThreshold = 0.08;
+    currentConfThreshold = 0.15;
     imgConfSlider.addEventListener('input', (e) => {
         currentConfThreshold = parseInt(e.target.value, 10) / 100;
         imgConfSliderVal.textContent = `${e.target.value}%`;
@@ -379,7 +379,7 @@ function handleUploadResults(detections, procTime) {
 
     // Found weapon(s)
     const primary = detections[0];
-    const category = primary.category || (primary.type === 'real' ? 'REAL_WEAPON' : (primary.type === 'toy' ? 'TOY_WEAPON' : 'UNCERTAIN'));
+    const category = primary.category || (primary.type === 'real' ? 'REAL_WEAPON' : 'TOY_WEAPON');
     const isReal = category === 'REAL_WEAPON';
     const isToy = category === 'TOY_WEAPON';
     const conf = primary.confidence;
@@ -389,8 +389,8 @@ function handleUploadResults(detections, procTime) {
     const H = uploadCanvas.height;
 
     detections.forEach(det => {
-        const cat = det.category || (det.type === 'real' ? 'REAL_WEAPON' : (det.type === 'toy' ? 'TOY_WEAPON' : 'UNCERTAIN'));
-        const boxColor = cat === 'REAL_WEAPON' ? '#ff3366' : (cat === 'TOY_WEAPON' ? '#ffaa00' : '#00d4ff');
+        const cat = det.category || (det.type === 'real' ? 'REAL_WEAPON' : 'TOY_WEAPON');
+        const boxColor = cat === 'REAL_WEAPON' ? '#ff3366' : '#ffaa00';
         const bx = det.bbox.x * W;
         const by = det.bbox.y * H;
         const bw = det.bbox.w * W;
@@ -1207,7 +1207,7 @@ if (startVideoAnalysisBtn) {
             return;
         }
 
-        const confThresh = videoConfSlider ? (parseInt(videoConfSlider.value, 10) / 100) : 0.20;
+        const confThresh = videoConfSlider ? (parseInt(videoConfSlider.value, 10) / 100) : 0.08;
         const frameStride = frameStrideSelect ? parseInt(frameStrideSelect.value, 10) : 2;
 
         startVideoAnalysisBtn.disabled = true;
@@ -1338,7 +1338,7 @@ function handleVideoJobSuccess(job) {
         } else {
             timeline.forEach(ev => {
                 const pill = document.createElement('div');
-                const catClass = ev.category === 'REAL_WEAPON' ? 'real' : (ev.category === 'TOY_WEAPON' ? 'toy' : 'uncertain');
+                const catClass = ev.category === 'REAL_WEAPON' ? 'real' : 'toy';
                 pill.className = `timeline-pill ${catClass}`;
                 pill.innerHTML = `
                     <span class="pill-time">⏱ ${ev.timestamp_sec}s</span>

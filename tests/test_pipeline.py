@@ -74,9 +74,9 @@ def test_categorize_detection():
     assert cat_real["category"] == "REAL_WEAPON"
     assert cat_real["threat_level"] == "HIGH"
 
-    # Borderline confidence real weapon -> UNCERTAIN
-    cat_uncertain = categorize_detection(raw_cls_id=0, raw_conf=0.28, cropped_bgr=steel_patch)
-    assert cat_uncertain["category"] == "UNCERTAIN"
+    # Real weapon candidate
+    cat_real_border = categorize_detection(raw_cls_id=0, raw_conf=0.28, cropped_bgr=steel_patch)
+    assert cat_real_border["category"] == "REAL_WEAPON"
 
     # Toy weapon class
     cat_toy = categorize_detection(raw_cls_id=1, raw_conf=0.75, cropped_bgr=steel_patch)

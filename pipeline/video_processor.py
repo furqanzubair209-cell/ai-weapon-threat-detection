@@ -105,7 +105,7 @@ def process_video_sync(
         frame_idx = 0
         processed_count = 0
         timeline_events = []
-        category_counts = {"REAL_WEAPON": 0, "TOY_WEAPON": 0, "UNCERTAIN": 0, "NO_WEAPON": 0}
+        category_counts = {"REAL_WEAPON": 0, "TOY_WEAPON": 0, "NO_WEAPON": 0}
         last_detections = []
 
         JOBS[job_id].update({
@@ -199,12 +199,7 @@ def process_video_sync(
                 "total_detections": len(timeline_events),
                 "real_weapons": category_counts["REAL_WEAPON"],
                 "toy_weapons": category_counts["TOY_WEAPON"],
-                "uncertain": category_counts["UNCERTAIN"],
-                "highest_threat": "HIGH" if category_counts["REAL_WEAPON"] > 0 else (
-                    "LOW" if category_counts["TOY_WEAPON"] > 0 else (
-                        "CAUTION" if category_counts["UNCERTAIN"] > 0 else "NONE"
-                    )
-                ),
+                                "highest_threat": "HIGH" if category_counts["REAL_WEAPON"] > 0 else ("LOW" if category_counts["TOY_WEAPON"] > 0 else "NONE"),
                 "timeline": summary_events[:50]  # First 50 key timestamps
             }
         })
