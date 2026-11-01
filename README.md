@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,2,24&height=230&section=header&text=AI%20Weapon%20Detection&fontSize=52&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Real-time%20threat%20classification%20%E2%80%A2%20YOLO11s%20%E2%80%A2%20FastAPI%20%E2%80%A2%20Cyberpunk%20dashboard&descSize=16&descAlignY=60" alt="AI Weapon Detection & Threat Classification System" width="100%"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,2,24&height=230&section=header&text=AI%20Weapon%20Detection&fontSize=52&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Threat%20classification%20%E2%80%A2%20YOLO11s%20%E2%80%A2%20FastAPI%20%E2%80%A2%20Neon%20dashboard&descSize=16&descAlignY=60" alt="AI Weapon Detection & Threat Classification System" width="100%"/>
 
 <br/>
 
@@ -9,26 +9,36 @@
 ![YOLO11s](https://img.shields.io/badge/Ultralytics-YOLO11s-00FFFF?style=for-the-badge&logo=yolo&logoColor=black)
 ![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
-![mAP@50](https://img.shields.io/badge/mAP%4050-90.84%25-brightgreen?style=flat-square)
-![mAP@50-95](https://img.shields.io/badge/mAP%4050--95-67.31%25-green?style=flat-square)
+![mAP@50](https://img.shields.io/badge/Test%20mAP%4050-88.4%25-brightgreen?style=flat-square)
+![mAP@50-95](https://img.shields.io/badge/Test%20mAP%4050--95-64.5%25-green?style=flat-square)
 ![Precision](https://img.shields.io/badge/Precision-92.7%25-blue?style=flat-square)
 ![Recall](https://img.shields.io/badge/Recall-89.3%25-blue?style=flat-square)
 ![F1](https://img.shields.io/badge/F1--Score-90.9%25-blueviolet?style=flat-square)
-![Epochs](https://img.shields.io/badge/Training-125%20epochs-orange?style=flat-square)
-![Latency](https://img.shields.io/badge/Latency-%3C30ms%20GPU%20%7C%20~80ms%20CPU-critical?style=flat-square)
+![Training](https://img.shields.io/badge/Training-100%20%2B%2025%20epochs-orange?style=flat-square)
 ![Tests](https://img.shields.io/badge/Tests-11%20pytest%20cases-success?style=flat-square&logo=pytest&logoColor=white)
-![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-lightgrey?style=flat-square)
+![Launchers](https://img.shields.io/badge/Launchers-Windows%20%7C%20backend%20cross--platform-lightgrey?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square)
 
 **Detect it. Classify it. Rate the threat.**
-Live webcam analysis, image scanning and full surveillance-video processing in one dashboard.
+Image scanning, webcam snapshots and full video analysis in one dashboard, served by a single FastAPI backend.
 
-[Features](#-key-capabilities) · [Model](#-model--training) · [Quick Start](#-quick-start) · [API](#-api-reference) · [Tests](#-testing) · [Architecture](#-project-architecture)
+[Demo](#-demo) · [Features](#-key-capabilities) · [How it works](#-how-it-works) · [Model](#-model--training) · [Quick start](#-quick-start) · [API](#-api-reference) · [Tests](#-testing) · [Limitations](#-honest-limitations)
 
 </div>
+
+---
+
+## 📸 Demo
+
+<table>
+<tr>
+<td width="33%" align="center"><img src="images/gun%20detection.png" alt="Firearm detected in an uploaded image" width="100%"/><br/><sub><b>Image upload</b> · firearm detection</sub></td>
+<td width="33%" align="center"><img src="images/knife%20detection.png" alt="Knife detected in an uploaded image" width="100%"/><br/><sub><b>Image upload</b> · knife detection</sub></td>
+<td width="33%" align="center"><img src="images/live%20detection.png" alt="Webcam snapshot analysis with confidence meters" width="100%"/><br/><sub><b>Webcam snapshot</b> · live threat meters</sub></td>
+</tr>
+</table>
 
 ---
 
@@ -36,21 +46,23 @@ Live webcam analysis, image scanning and full surveillance-video processing in o
 
 | | Capability | What it does |
 |:-:|---|---|
-| ⚡ | **Real-time detection** | Handguns, pistols, revolvers, knives, machetes and other bladed threats, with sub-30 ms latency on GPU and ~80 ms on CPU |
-| 🖼️ | **Physical vs. printed depiction** | Filters flat 2D weapon art on t-shirts, posters and stickers using edge, texture and entropy analysis, without suppressing real weapons |
-| 🧸 | **Toy vs. real classification** | Separates real firearms and knives from toy replicas, nerf blasters and water guns using colorimetry (safety blaze-orange tips) and trained feature margins |
-| 🎥 | **Video upload and analysis** | Ingests `.mp4` `.avi` `.mov` `.mkv` `.webm`, overlays boxes and HUD diagnostics, exports an annotated video with jump-to-timestamp navigation |
-| 📷 | **Live Camera Studio** | Real-time snapshot capture with multi-threat confidence meters |
-| 🖥️ | **Cyberpunk dashboard** | Responsive neon UI served directly by the FastAPI backend |
+| 🎯 | **Weapon detection** | YOLO11s detects firearms and knives and assigns each one a threat category. Large images are run at higher resolution (640 / 800 / 960 px) so thin blades and small objects survive |
+| 🔁 | **Rescue pass** | If the first pass finds nothing at sensitivity ≤ 20%, a second test-time-augmented pass runs to recover thin blades, distant firearms and awkward lighting |
+| 🖼️ | **Physical vs. printed depiction** | Flags flat 2D weapon art (shirt prints, posters) using entropy, gradient and texture analysis, with a guard so metallic, high-texture objects are never dismissed as prints |
+| 🧸 | **Toy vs. real classification** | Combines the model's `toy_weapon` class with HSV colorimetry (blaze-orange safety tips, neon plastics) and a metal-surface check that protects real weapons from being relabeled |
+| 🎥 | **Video analysis** | Upload `.mp4` `.avi` `.mov` `.mkv` `.webm`, get an annotated video back, a threat summary, and a clickable timeline that jumps the player to each detection |
+| 📷 | **Webcam snapshots** | Capture a frame from your camera, analyze it, and see per-class confidence meters plus a running detection log |
+| 🖥️ | **Neon dashboard** | Responsive single-page UI (no build step) served directly by the backend |
 
 ### 🚨 Threat Categories
 
-| Category | Meaning | Alert level |
-|---|---|:-:|
-| `REAL_WEAPON` | Confirmed physical firearm or knife | 🔴 **HIGH** |
-| `TOY_WEAPON` | Toy gun or replica | 🟡 **LOW** |
-| `UNCERTAIN` | Borderline confidence or ambiguous silhouette, needs human verification | 🟠 **REVIEW** |
-| `NO_WEAPON` | Weapon-free frame, or flat printed depiction filtered out | 🟢 **NONE** |
+| Category | Meaning | Threat level | Box color |
+|---|---|:-:|:-:|
+| `REAL_WEAPON` | Physical firearm or knife | 🔴 **HIGH** | Red |
+| `TOY_WEAPON` | Toy gun, replica or imitation | 🟡 **LOW** | Amber |
+| `NO_WEAPON` | Below threshold, background noise, or flat printed depiction | 🟢 **NONE** | Suppressed from output |
+
+> `NO_WEAPON` results are filtered out of API responses by default, so a clean frame simply returns an empty `detections` list.
 
 ---
 
@@ -58,53 +70,72 @@ Live webcam analysis, image scanning and full surveillance-video processing in o
 
 ```mermaid
 flowchart LR
-    A[📷 Webcam / Image / Video] --> B[YOLO11s Detector<br/>pipeline/detector.py]
-    B --> C{Detection found?}
-    C -- No --> N[NO_WEAPON]
-    C -- Yes --> D[Depiction Filter<br/>edge · texture · entropy]
-    D -- Flat print --> N
-    D -- Physical --> E[Toy Heuristics<br/>colorimetry + margins]
-    E --> F{Categorize}
-    F --> R[REAL_WEAPON · HIGH]
-    F --> T[TOY_WEAPON · LOW]
-    F --> U[UNCERTAIN · REVIEW]
-    R --> G[Annotated output + HUD]
-    T --> G
-    U --> G
-    N --> G
+    A[📷 Image / Webcam snapshot / Video frame] --> B[YOLO11s detector<br/>adaptive 640-960 px<br/>pipeline/detector.py]
+    B --> R0{Any boxes?}
+    R0 -- No, sensitivity ≤ 20% --> TTA[Augmented rescue pass]
+    R0 -- Yes --> C
+    TTA --> C[Per-box categorization<br/>pipeline/classifier.py]
+    C --> T{Toy evidence?<br/>model class or HSV colorimetry}
+    T -- Yes --> TOY[TOY_WEAPON · LOW]
+    T -- No --> L{Above threshold<br/>and not noise?}
+    L -- No --> N[NO_WEAPON · filtered]
+    L -- Yes --> D{Flat print?<br/>entropy · gradient · metal guard}
+    D -- Print --> N
+    D -- Physical --> RW[REAL_WEAPON · HIGH]
+    RW --> S[Overlap suppression]
+    TOY --> S
+    S --> O[JSON result + annotated frame]
 
     style B fill:#00FFFF,color:#000,stroke:none
-    style R fill:#D7263D,color:#fff,stroke:none
-    style T fill:#F4B400,color:#000,stroke:none
-    style U fill:#FF7F11,color:#000,stroke:none
+    style RW fill:#D7263D,color:#fff,stroke:none
+    style TOY fill:#F4B400,color:#000,stroke:none
     style N fill:#2E9E5B,color:#fff,stroke:none
 ```
+
+**Confidence reporting.** The `confidence` field is a *calibrated operational score*, not the raw network output. Confirmed physical detections are mapped to a 75-99% range so a verified weapon never shows a confusing 15% label. The untouched model score is always returned alongside it as `raw_confidence`; use that one for threshold tuning or evaluation.
 
 ---
 
 ## 🔬 Model & Training
 
-The system uses a **two-phase trained YOLO11s** checkpoint (Ultralytics, 9.42M parameters, 21.4 GFLOPs).
+A **two-phase trained YOLO11s** model (Ultralytics, 9.41M parameters, 21.4 GFLOPs, classes `real_weapon` and `toy_weapon`). The full pipeline, from dataset conversion to evaluation and ONNX export, is documented in [`Weapon_Detection_System.ipynb`](Weapon_Detection_System.ipynb).
 
 | | Phase 1: Baseline | Phase 2: Toy fine-tune |
 |---|---|---|
-| **Run** | `weapon_yolo11s-2` | `weapon_yolo11s_toy_finetune` |
-| **Start weights** | Pretrained YOLO11s | `weapon_yolo11s-2/weights/best.pt` |
-| **Data** | 3,385 train · 725 val · 727 test (Sohas knives + Armas firearms + background negatives) | Adds Roboflow toy-firearm data: toy samples 217 → 907, 4,072 training images total |
-| **Schedule** | 100 epochs, AdamW, cosine LR, mosaic augmentation | 25 epochs, `lr0 = 0.0002` |
-| **Result** | Peak mAP@50 **88.1%**, mAP@50-95 **61.2%** (epoch 79) | mAP@50 **90.84%**, mAP@50-95 **67.31%** |
+| **Start weights** | Pretrained YOLO11s | Phase 1 `best.pt` |
+| **Data** | Sohas (knives) + Armas (firearms) + background negatives, converted to YOLO format | Adds 687 toy-weapon images (690 boxes): toy boxes 217 → 907 |
+| **Split** | 70 / 15 / 15 → 3,385 train · 725 val · 727 test | 4,072 train · 725 val · 727 test |
+| **Schedule** | Up to 100 epochs, AdamW, mosaic/mixup augmentation, early stopping | 25 epochs, `lr0 = 0.0002`, AdamW |
+| **Peak result** | Epoch 79: mAP@50 **88.1%**, mAP@50-95 **61.2%** (validation) | mAP@50 **90.8%**, mAP@50-95 **67.3%** (validation) |
 
-### 📊 Test-Split Benchmark (727 unseen images)
+### 🗂️ Dataset Breakdown
 
-| Metric | Score |
-|---|:-:|
-| Overall Precision | **92.7%** |
-| Overall Recall | **89.3%** |
-| Overall F1-Score | **90.9%** |
-| Real Weapon mAP@50 | **85.1%** |
-| Toy Weapon mAP@50 | **91.8%** |
+| | Images | Real-weapon boxes | Toy-weapon boxes | Notes |
+|---|:-:|:-:|:-:|---|
+| **Phase 1 dataset (merged)** | 4,837 | 3,800 | 300 | Includes 757 background / no-object images (hard negatives) |
+| **Phase 2 · Train** | 4,072 | 2,647 | 907 | After adding 687 toy images |
+| **Phase 2 · Validation** | 725 | 594 | 31 | Used for checkpoint selection |
+| **Phase 2 · Test** | 727 | 559 | 52 | Never seen during training; used for the benchmark below |
 
-> ✅ **Checkpoint provenance:** the root `best.pt` was verified through safe dictionary metadata inspection to be identical to `training/weapon_yolo11s_toy_finetune/weights/best.pt` (Phase 2, epoch 25), so all **125 training epochs** are included. A pristine backup is kept as `best.pt.backup`.
+### 📊 Held-out Test Benchmark (727 unseen images, Phase 2 model)
+
+| Class | Instances | Precision | Recall | F1 | mAP@50 | mAP@50-95 |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|
+| `real_weapon` | 559 | 93.1% | 86.2% | 89.5% | **85.1%** | 65.1% |
+| `toy_weapon` | 52 | 92.3% | 92.3% | 92.3% | **91.8%** | 64.0% |
+| **All** | 611 | **92.7%** | **89.3%** | **90.9%** | **88.4%** | **64.5%** |
+
+> 📝 The 90.8% / 67.3% figures in the Phase 2 row are from the **validation** split used during training. The table above is the honest, unseen **test** result, and it is the one to quote.
+
+### ⚡ Speed
+
+| Setup | Measured | Source |
+|---|---|---|
+| Tesla T4 GPU, 640 px, model inference only | **~10 ms / image** | Phase 2 validation run in the notebook |
+| Colab Xeon CPU, batched test evaluation | ~530 ms / image | Test evaluation in the notebook |
+| Full pipeline on a CPU laptop, one webcam snapshot | ~600 ms | Dashboard screenshot above |
+
+End-to-end latency includes preprocessing, optional rescue pass, color/texture analysis and JSON encoding, so expect it to be higher than raw model inference. A CUDA GPU makes the biggest difference.
 
 ---
 
@@ -112,38 +143,41 @@ The system uses a **two-phase trained YOLO11s** checkpoint (Ultralytics, 9.42M p
 
 ### Prerequisites
 
-- Windows 10/11 or Linux
-- Python 3.10+ (Anaconda or standard Python)
-- *Optional:* NVIDIA GPU with CUDA for real-time video batch acceleration
+- Python 3.10+
+- Optional: NVIDIA GPU with CUDA for much faster video processing
 
 ### Install
 
 ```bash
-# enter the project folder
-cd weapon_detection_project
+git clone https://github.com/furqanzubair209-cell/ai-weapon-threat-detection.git
+cd ai-weapon-threat-detection
 
-# install dependencies
+python -m venv .venv
+# Windows: .venv\Scripts\activate    ·    Linux/macOS: source .venv/bin/activate
+
 pip install -r requirements.txt
 ```
+
+The trained weights ship in the repo as `best.pt` (about 19 MB), so no extra download is needed.
 
 ### Run
 
 <table>
 <tr>
-<td width="33%" valign="top">
+<td width="50%" valign="top">
 
-**⚡ Option A: One-click**
+**⚡ Option A: One-click (Windows)**
 
 ```cmd
 run_project.bat
 ```
 
-Sets the OpenMP workarounds, starts the FastAPI backend and opens `http://127.0.0.1:8000` in your browser.
+Sets the OpenMP workaround, starts the backend and opens `http://127.0.0.1:8000`. It looks for Anaconda at a fixed path first and falls back to `python` on your `PATH`.
 
 </td>
-<td width="33%" valign="top">
+<td width="50%" valign="top">
 
-**🧩 Option B: Manual backend**
+**🧩 Option B: Any OS**
 
 ```bash
 python backend.py
@@ -152,20 +186,13 @@ python backend.py
 Then open
 [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
-</td>
-<td width="33%" valign="top">
-
-**📊 Option C: Streamlit**
-
-```cmd
-run_app.bat
-```
-
-Launches the alternative dashboard at `http://localhost:8501`.
+Interactive API docs: [`/docs`](http://127.0.0.1:8000/docs)
 
 </td>
 </tr>
 </table>
+
+> `run_backend.bat` is an equivalent Windows launcher.
 
 ---
 
@@ -173,10 +200,10 @@ Launches the alternative dashboard at `http://localhost:8501`.
 
 | Method | Endpoint | Purpose |
 |:-:|---|---|
-| `GET` | `/health` | Backend status, loaded weights, active categories |
+| `GET` | `/health` | Backend status, loaded weights, model classes, categories |
 | `POST` | `/detect` | Analyze a base64 image |
-| `POST` | `/detect/file` | Analyze an uploaded image file (`.jpg` `.png` `.webp`) |
-| `POST` | `/detect/video` | Queue a video for analysis |
+| `POST` | `/detect/file` | Analyze an uploaded image file (multipart) |
+| `POST` | `/detect/video` | Queue a video for background analysis |
 | `GET` | `/video/status/{job_id}` | Poll progress and results |
 | `GET` | `/download/video/{job_id}` | Download the annotated `.mp4` |
 | `GET` | `/stream/video/{job_id}` | In-browser playback of the processed video |
@@ -184,10 +211,10 @@ Launches the alternative dashboard at `http://localhost:8501`.
 <details>
 <summary><b>🖼️ POST /detect: request and response</b></summary>
 
-**Body**
+**Body** (`conf_threshold` defaults to `0.15`)
 
 ```json
-{"image": "data:image/jpeg;base64,...", "conf_threshold": 0.20}
+{"image": "data:image/jpeg;base64,...", "conf_threshold": 0.15}
 ```
 
 **Response**
@@ -197,18 +224,25 @@ Launches the alternative dashboard at `http://localhost:8501`.
   "status": "success",
   "detections": [
     {
-      "class": "Real Weapon (Gun/Knife)",
+      "class": "Real Weapon (Knife/Gun)",
       "category": "REAL_WEAPON",
       "threat_level": "HIGH",
-      "confidence": 91.4,
-      "bbox": {"x": 0.24, "y": 0.18, "w": 0.35, "h": 0.42}
+      "confidence": 91.2,
+      "raw_confidence": 66.4,
+      "raw_class_id": 0,
+      "type": "real",
+      "verdict_reason": "Physical weapon verified",
+      "bbox": {"x": 0.24, "y": 0.18, "w": 0.35, "h": 0.42},
+      "bbox_px": [154, 86, 378, 288]
     }
   ],
   "count": 1,
-  "processing_time_ms": 28.4,
+  "processing_time_ms": 615.6,
   "image_size": [640, 480]
 }
 ```
+
+`bbox` is normalized (0-1, top-left origin). `bbox_px` is in pixels. `confidence` is calibrated; `raw_confidence` is the model's own score.
 
 </details>
 
@@ -220,16 +254,33 @@ Launches the alternative dashboard at `http://localhost:8501`.
 | Field | Type | Default | Notes |
 |---|---|---|---|
 | `file` | binary | n/a | `.mp4` `.avi` `.mov` `.mkv` `.webm`, max 100 MB |
-| `conf_threshold` | float | `0.20` | Minimum detection confidence |
-| `frame_stride` | int | `2` | `2` means analyze every 2nd frame |
+| `conf_threshold` | float | `0.15` | Minimum detection sensitivity |
+| `frame_stride` | int | `2` | `2` means run inference on every 2nd frame and reuse boxes in between |
 
 **Response**
 
 ```json
-{"job_id": "...", "status": "queued", "status_url": "/video/status/{job_id}"}
+{"job_id": "…", "status": "queued", "message": "Video analysis queued successfully.", "status_url": "/video/status/{job_id}"}
 ```
 
-`GET /video/status/{job_id}` returns `progress_percent`, `current_frame`, `total_frames` and detection summaries on completion.
+`GET /video/status/{job_id}` returns `status` (`queued` → `processing` → `completed` or `failed`), `progress_percent`, `current_frame`, `total_frames`, `fps` and `duration_sec`. On completion it adds a `summary` with `total_detections`, `highest_threat` and a `timeline` of the first 50 detection events (timestamp, class, category, confidence, box).
+
+</details>
+
+<details>
+<summary><b>🧪 Quick test with curl</b></summary>
+
+```bash
+# health
+curl http://127.0.0.1:8000/health
+
+# image file
+curl -F "file=@sample.jpg" -F "conf_threshold=0.15" http://127.0.0.1:8000/detect/file
+
+# video, then poll
+curl -F "file=@clip.mp4" http://127.0.0.1:8000/detect/video
+curl http://127.0.0.1:8000/video/status/<job_id>
+```
 
 </details>
 
@@ -247,12 +298,12 @@ pytest tests -v
 | 2 | `test_detect_image_base64` | Base64 inference and response schema |
 | 3 | `test_detect_image_invalid_base64` | Graceful handling of corrupted payloads |
 | 4 | `test_detect_image_file_multipart` | Multipart file uploads |
-| 5 | `test_video_analysis_workflow` | End-to-end upload, frame processing, polling, H.264 generation |
-| 6 | `test_video_upload_validation_errors` | Rejects bad extensions, oversized or empty files, path traversal |
-| 7 | `test_model_loading` | Checkpoint verification and class mapping |
-| 8 | `test_physical_vs_depiction_analysis` | Edge, texture and entropy analysis for shirt prints |
+| 5 | `test_video_analysis_workflow` | End-to-end upload, processing, polling and annotated-video download |
+| 6 | `test_video_upload_validation_errors` | Rejects bad extensions, empty files and malformed job IDs |
+| 7 | `test_model_loading` | Checkpoint loads with the expected class mapping |
+| 8 | `test_physical_vs_depiction_analysis` | Printed-depiction analysis |
 | 9 | `test_toy_color_heuristics` | Blaze-orange safety-tip colorimetry |
-| 10 | `test_categorize_detection` | Tiered categorization into the four threat classes |
+| 10 | `test_categorize_detection` | Tiered categorization logic |
 | 11 | `test_predict_image_execution` | Full inference pipeline |
 
 ---
@@ -260,29 +311,25 @@ pytest tests -v
 ## 📁 Project Architecture
 
 ```text
-weapon_detection_project/
-├── backend.py                   FastAPI REST API and static server
-├── best.pt                      YOLO11s trained weights (125 epochs)
-├── best.pt.backup               Original backup of weights
-├── requirements.txt             Project dependencies
-├── run_project.bat              One-click Windows launcher
-├── run_backend.bat              Backend launcher
-├── run_app.bat                  Streamlit launcher
-├── app.py                       Alternative Streamlit dashboard
-├── pipeline/                    Modular AI pipeline
-│   ├── classifier.py            Depiction and toy weapon classifier
-│   ├── detector.py              YOLO11s inference and annotation
-│   └── video_processor.py       Frame processing and MP4 encoder
-├── frontend/                    Web UI
-│   ├── index.html               Main dashboard with video upload
-│   ├── styles.css               Cyberpunk neon responsive styles
-│   └── script.js                Async client and video polling
-├── tests/                       Automated test suite
-│   ├── test_backend.py          API and video endpoint tests
-│   └── test_pipeline.py         Model and classification unit tests
-└── training/                    Training logs and validation curves
-    ├── weapon_yolo11s-2/            Phase 1 (100 epochs baseline)
-    └── weapon_yolo11s_toy_finetune/ Phase 2 (25 epochs fine-tune)
+ai-weapon-threat-detection/
+├── backend.py                       FastAPI REST API and static file server
+├── best.pt                          Trained YOLO11s weights
+├── Weapon_Detection_System.ipynb    Full training and evaluation notebook (Colab)
+├── requirements.txt                 Dependencies
+├── run_project.bat                  One-click Windows launcher (opens the browser)
+├── run_backend.bat                  Windows backend launcher
+├── images/                          README screenshots
+├── pipeline/                        Modular AI pipeline
+│   ├── detector.py                  YOLO11s inference, rescue pass, box cleanup, annotation
+│   ├── classifier.py                Toy, depiction and threat categorization + confidence calibration
+│   └── video_processor.py           Frame loop, annotated MP4 writer, job tracking, temp cleanup
+├── frontend/                        Web dashboard (plain HTML, CSS, JS)
+│   ├── index.html                   Image, webcam and video sections
+│   ├── styles.css                   Neon responsive styling
+│   └── script.js                    API client, webcam capture, video polling and timeline
+└── tests/
+    ├── test_backend.py              API and video endpoint tests
+    └── test_pipeline.py             Model and classification unit tests
 ```
 
 ---
@@ -291,29 +338,43 @@ weapon_detection_project/
 
 | | Feature | Details |
 |:-:|---|---|
-| 🔒 | **Path traversal protection** | Job IDs are validated with a UUID regex; download paths are restricted to the temporary outputs directory |
-| 🧹 | **Safe file deletion** | Temporary uploads and outputs older than 1 hour are purged automatically |
-| 📏 | **Resource limits** | Maximum upload size 100 MB, maximum video duration 180 s |
-| ⏱️ | **Async processing** | Long video jobs run as background tasks, so there are no HTTP timeouts and the UI stays responsive |
+| 🔒 | **Path traversal protection** | Job IDs must match a UUID-style pattern, and download paths are checked to stay inside the outputs directory |
+| 🧹 | **Temp file cleanup** | Uploads and outputs older than one hour are removed (triggered on `/health`) |
+| 📏 | **Resource limits** | 100 MB upload cap (streamed in 1 MB chunks) and 180 s maximum video duration |
+| ⏱️ | **Background jobs** | Long videos run as background tasks, so requests return immediately and the UI polls for progress |
+
+> This is a local demo server: CORS is open (`*`), there is no authentication, and job state is held in memory. Add auth, restrict origins and use a persistent job store before exposing it beyond your machine.
+
+---
+
+## 🔎 Honest Limitations
+
+- **Small toy test set.** Only 52 toy instances in the test split, so the 91.8% toy mAP@50 has wide error bars. Real weapons dominate the data (559 of 611 test boxes).
+- **Hand-tuned heuristics.** The toy and printed-depiction checks use fixed HSV, entropy and texture thresholds. They help on typical cases but will misfire on unusual lighting, painted real guns or realistic metallic toys.
+- **Calibrated scores.** Displayed confidence is rescaled for readability. Use `raw_confidence` when comparing against the benchmark.
+- **Webcam is snapshot-based.** The dashboard captures a frame and analyzes it; it is not a continuous live stream.
+- **Dataset-bound.** Performance depends on the Sohas and Armas image styles, so expect drops on unfamiliar camera angles, low-resolution CCTV or heavily occluded objects.
 
 ---
 
 ## ⚠️ Disclaimer
 
-This system is a decision-support tool. `UNCERTAIN` and `HIGH` alerts should always be verified by a trained human operator before any action is taken. Accuracy depends on lighting, camera angle and image quality.
+This is a decision-support and research project, not a certified security product. Every `HIGH` alert should be verified by a trained human operator before any action is taken. Accuracy depends on lighting, camera angle and image quality.
 
 ---
 
 ## 🗓️ Roadmap
 
-- [x] YOLO11s baseline (100 epochs)
-- [x] Toy-weapon fine-tuning (25 epochs)
+- [x] YOLO11s baseline training
+- [x] Toy-weapon fine-tuning
 - [x] Depiction filter and toy heuristics
-- [x] Video upload with annotated export
+- [x] Video upload with annotated export and clickable timeline
 - [x] Automated pytest suite
-- [ ] Multi-camera / RTSP stream support
+- [ ] Continuous webcam / RTSP stream support
 - [ ] Alert notifications (email / webhook)
 - [ ] Docker image for one-command deployment
+- [ ] Larger toy and hard-negative test set for tighter metrics
+- [ ] Learned toy/real classifier to replace the color heuristics
 
 ---
 
